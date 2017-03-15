@@ -5,8 +5,6 @@
     <% include ./partials/_header %>
   </head>
   <body>
-      <% for (var fullURL in shortURL) { %>
-         <li><%= shortURL %> : <%= shortURL[fullURL] %></li>
-      <% }; %>
+         <li><%= shortURL %> : <%= redirectURL %></li>
   </body>
   </html>

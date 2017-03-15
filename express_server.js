@@ -1,4 +1,12 @@
 //express_server.js
+function generateRandomString() {
+  var text = "";
+  var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+  for( var i=0; i < 6; i++ )
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  return text;
+}
 
 var express = require("express");
 var app = express();
@@ -38,7 +46,9 @@ app.get("/urls/new", (req, res) => {
 //redirects to urls_show to display full url and name
 //work in progress (need to display full url)
 app.get("/urls/:id", (req, res) => {
-  let templateVars = { shortURL: req.params.id };
+  let templateVars = { shortURL: req.params.id,
+                      redirectURL: req.params.body
+   };
   res.render("urls_show", templateVars);
 });
 
@@ -47,7 +57,7 @@ app.get("/urls/:id", (req, res) => {
 //work in progress..(no submission form present in urls_new.ejs)
 app.post("/urls", (req, res) => {
   console.log(req.body);  // debug statement to see POST parameters
-  res.send("Ok");
+  // res.send("Ok");
   let generateUrl = generateRandomString()   ;    // Respond with 'Ok' (we will replace this)
   let longurl = req.body.longURL;
   urlDatabase[generateUrl] = longurl;
@@ -55,13 +65,11 @@ app.post("/urls", (req, res) => {
   //test code to generate short url and push long url into urlDatabase
   // generateRandomString()
   // req.push(urlDatabase);
-  res.redirect("/urls/" + generateUrl (req, res) => {
+  res.redirect("/urls/" + generateUrl)
   // res.render("res");
 });
 
 
-
-});
 
 // app.get('/customer')
 // app.get('/customer/:id')
@@ -74,12 +82,4 @@ app.listen(PORT, () => {
 });
 
 //Generate Random String
-function generateRandomString() {
-  var text = "";
-  var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-  for( var i=0; i < 6; i++ )
-    text += possible.charAt(Math.floor(Math.random() * possible.length));
-    urlDatabase.push(text);
-}
 
