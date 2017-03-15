@@ -1,4 +1,12 @@
 //express_server.js
+
+//planning
+// app.get('/customer')
+// app.get('/customer/:id')
+// app.post('/customer')
+// app.put('/customer/:id')
+// app.delete('/customer/:id')
+
 function generateRandomString() {
   var text = "";
   var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -19,32 +27,32 @@ var urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-//allows us to acces POST request parameters stored to the urlDatabase variable.
+  /////////////allows us to acces POST request parameters stored to the urlDatabase variable.///////////
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
-//displays hello world message on acces to localhost:8080/urls
+  /////////////displays hello world message on acces to localhost:8080/urls///////////
 app.get("/hello", (req, res) => {
   res.end("<html><body>Hello <b>World</b></body></html>\n");
 });
 
-//pushes the urlDatabase into json file and text
+  /////////////pushes the urlDatabase into json file and text///////////
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-//redirects to urls_index to show url name and shortenedname
+  /////////////redirects to urls_index to show url name and shortenedname///////////
 app.get("/urls", (req, res) => {
   let templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
 
-//redirects to urls_new
+  ///////////redirects to urls_new///////////
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
-//redirects to urls_show to display full url and name
-//work in progress (need to display full url)
+  /////////////redirects to urls_show to display full url and name///////////////
+
 app.get("/urls/:id", (req, res) => {
   let templateVars = { shortURL: req.params.id,
                       redirectURL: urlDatabase[req.params.id]
@@ -52,9 +60,17 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+app.post('/urls/:id', (req, res) => {
+  let templateVars = { shortURL: req.params.id,
+                      redirectURL: urlDatabase[req.params.id]
+   };
+  urlDatabase[req.params.id] = req.body.updateURL;
+  res.redirect('/urls');
+});
 
-//uses urls_new.ejs to enter and receive a POST request
-//work in progress..(no submission form present in urls_new.ejs)
+
+///////////URL PAGE SECTION /////////////
+/////////////////////////////////////////
 app.post("/urls", (req, res) => {
   console.log(req.body);  // debug statement to see POST parameters
   // res.send("Ok");
@@ -63,23 +79,29 @@ app.post("/urls", (req, res) => {
   urlDatabase[generateUrl] = longurl;
 
   //test code to generate short url and push long url into urlDatabase
-  // generateRandomString()
-  // req.push(urlDatabase);
-  res.redirect("/urls/" + generateUrl)
-  // res.render("res");
+  // res.redirect("/urls/" + generateUrl)
+  res.redirect(longurl);
+});
+
+    ////////// Delete Button and Update ////////////////
+
+app.post('/urls/:id/delete', (req, res) => {
+  delete urlDatabase[req.params.id];
+  res.redirect('/urls');
+});
+
+app.post('/urls/:id/update', (req, res) => {
+  let shortkey = urlDatabase[req.params.id]
+  res.redirect('/urls/' + shortkey);
 });
 
 
 
-// app.get('/customer')
-// app.get('/customer/:id')
-// app.post('/customer')
-// app.put('/customer/:id')
-// app.delete('/customer/:id')
+
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-//Generate Random String
+
 

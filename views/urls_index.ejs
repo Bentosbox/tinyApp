@@ -6,7 +6,16 @@
 </head>
 <body>
     <% for (var newUrl in urls) { %>
-        <li><%= newUrl %> : <%= urls[newUrl] %></li>
+        <li><%= newUrl %> : <%= urls[newUrl] %>
+          <form method="POST" action="/urls/<%= newUrl %>/delete">
+            <p>
+              <button>Delete URL</button>
+            </p>
+          </form>
+            <p>
+              <a href="/urls/<%= newUrl %>">link text</a>
+            </p>
+        </li>
     <% } %>
     <b> Click here to shorten URL</b>
 </body>
