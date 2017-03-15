@@ -47,7 +47,7 @@ app.get("/urls/new", (req, res) => {
 //work in progress (need to display full url)
 app.get("/urls/:id", (req, res) => {
   let templateVars = { shortURL: req.params.id,
-                      redirectURL: req.params.body
+                      redirectURL: urlDatabase[req.params.id]
    };
   res.render("urls_show", templateVars);
 });
