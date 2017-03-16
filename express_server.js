@@ -19,7 +19,9 @@ function generateRandomString() {
 var express = require("express");
 var app = express();
 var PORT = process.env.PORT || 8080; // default port 8080
+var cookieParser = require("cookie-parser");
 
+app.use(cookieParser());
 app.set("view engine", "ejs");
 
 var urlDatabase = {
@@ -43,19 +45,23 @@ app.get("/urls.json", (req, res) => {
 
   /////////////redirects to urls_index to show url name and shortenedname///////////
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase };
+  let templateVars = { urls: urlDatabase,
+                      username: req.cookies["username"]
+                     };
   res.render("urls_index", templateVars);
 });
 
   ///////////redirects to urls_new///////////
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  let templateVars = {username: req.cookies["username"]};
+  res.render("urls_new", templateVars);
 });
   /////////////redirects to urls_show to display full url and name///////////////
 
 app.get("/urls/:id", (req, res) => {
   let templateVars = { shortURL: req.params.id,
-                      redirectURL: urlDatabase[req.params.id]
+                      redirectURL: urlDatabase[req.params.id],
+                      username: req.cookies["username"]
    };
   res.render("urls_show", templateVars);
 });
@@ -93,6 +99,21 @@ app.post('/urls/:id/delete', (req, res) => {
 app.post('/urls/:id/update', (req, res) => {
   let shortkey = urlDatabase[req.params.id]
   res.redirect('/urls/' + shortkey);
+});
+
+
+/////////////COOKIE SETUP/////////////////
+
+app.post('/login', (req, res) => {
+  let username = req.body.username
+  res.cookie('username', username);
+  res.redirect('/urls');
+});
+
+app.post('/logout', (req, res) => {
+  res.clearCookie('username');
+  // delete urlDatabase[req.body.username]
+  res.redirect('/urls');
 });
 
 

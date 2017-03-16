@@ -1,1 +1,12 @@
-<header>This is a temporary header</header>
+  <header> <% if (username) { %>
+          <h1><%= username %></h1>
+          <form method="POST" action="/logout"><button>Logout</button>
+          </form>
+    <% } else { %>
+    <form method="POST" action="/login">
+      <input id="username" name="username" type="text" placeholder="Username">
+      <button>Sign In</button>
+    </form>
+     <% } %>
+  </header>
+
