@@ -1,12 +1,15 @@
-  <header> <% if (username) { %>
-          <h1><%= username %></h1>
-          <form method="POST" action="/logout"><button>Logout</button>
-          </form>
-    <% } else { %>
-    <form method="POST" action="/login">
-      <input id="username" name="username" type="text" placeholder="Username">
-      <button>Sign In</button>
-    </form>
-     <% } %>
-  </header>
-
+<!doctype html>
+<html>
+  <head>
+  </head>
+  <body>
+    <% if(users){%>
+      <h1>Hi!</h1>
+      <form method="POST" action="/logout"><button>Logout</button>
+      </form>
+    <% } else {%>
+      <p><a href='/login'>Login</a></p>
+      <p><a href='/register'>Register</a></p>
+    <% } %>
+  </body>
+</html>
