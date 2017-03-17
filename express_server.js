@@ -31,8 +31,14 @@ app.set("view engine", "ejs");
 
 
 var urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": {
+    longUrl: "http://www.lighthouselabs.ca",
+    userID: "userRandomID"
+  },
+  "9sm5xK": {
+    longUrl: "http://www.google.com" ,
+     userID: "user2RandomID"
+  }
 };
 
 var users = {
@@ -82,10 +88,9 @@ app.get("/urls.json", (req, res) => {
 
   /////////////redirects to urls_index to show url name and shortenedname///////////
 app.get("/urls", (req, res) => {
-
+  id = req.cookies['user_id'];
   // console.log("loading urls, currnt user email is: ", user_email_goes_here);  // TODO: this should be possible
-
-  let templateVars = { urls: urlDatabase,
+  let templateVars = { urls: urlsForUser(id),
                       users: req.cookies["user_id"]
                      };
   res.render("urls_index", templateVars);
@@ -94,7 +99,11 @@ app.get("/urls", (req, res) => {
   ///////////redirects to urls_new///////////
 app.get("/urls/new", (req, res) => {
   let templateVars = {users: req.cookies["user_id"]};
-  res.render("urls_new", templateVars);
+  if (req.cookies['user_id']){
+    res.render("urls_new", templateVars);
+  } else {
+    res.redirect('/login');
+  }
 });
 
 
@@ -107,7 +116,7 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
   let templateVars = { shortURL: req.params.id,
-                      redirectURL: urlDatabase[req.params.id],
+                      redirectURL: urlDatabase[req.params.id].longUrl,
                       users: req.cookies['user_id']
    };
   res.render("urls_show", templateVars);
@@ -134,11 +143,19 @@ app.post('/urls/:id', (req, res) => {
 ///////////URL PAGE SECTION /////////////
 /////////////////////////////////////////
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // debug statement to see POST parameters
+  console.log(req.cookies['user_id']);  // debug statement to see POST parameters
   // res.send("Ok");
   let generateUrl = generateRandomString()   ;    // Respond with 'Ok' (we will replace this)
   let longurl = req.body.longURL;
-  urlDatabase[generateUrl] = longurl;
+  let cookieId = req.cookies['user_id'];
+  // urlDatabase[generateUrl] = {};
+
+  urlDatabase[generateUrl] = {
+      longUrl: longurl,
+      UserId: cookieId
+    };
+  // urlDatabase[generateUrl][userID] = req.cookies['user_id'];
+  // urlDatabase[generateUrl][longUrl] = longurl;
 
   //test code to generate short url and push long url into urlDatabase
   // res.redirect("/urls/" + generateUrl)
@@ -148,13 +165,18 @@ app.post("/urls", (req, res) => {
     ////////// Delete Button and Update ////////////////
 
 app.post('/urls/:id/delete', (req, res) => {
+  if (req.cookies['user_id'] === urlDatabase[req.params.id].userID) {
   delete urlDatabase[req.params.id];
   res.redirect('/urls');
+  }
 });
 
 app.post('/urls/:id/update', (req, res) => {
+  if (req.cookies['user_id'] === urlDatabase[req.params.id].userID){
   let shortkey = urlDatabase[req.params.id]
   res.redirect('/urls/' + shortkey);
+  }
+
 });
 
 
@@ -218,33 +240,66 @@ app.get('/login', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+
+  let success = false
+  let loggedUser;
+  for (user in users) {
+    if (email === users[user].email) {
+      if (password === users[user].password) {
+        console.log('logged in!');
+        success = true;
+        loggedUser = user;
+      }
+    }
+  }
+
+  if (success && loggedUser) {
+    res.cookie('user_id', loggedUser);
+    res.redirect('/urls');
+  } else {
+    res.status(403).send('403: WRONG STUFF');
+  }
+        // res.status(403).send('403: WRONG PASSWORD');
   // TODO: currently only works on first user (other users get the 403 even if they're valid)
   // Check to see if there is a user with the body email
   // const user = users[req.body.user];
     // Check to see if that user has the body password
-  var successId = false
-  for (let userId in users) {
-    if (req.body.email === users[userId].email){     // at least 2 bugs
-      // If so, login, set email cookie, and redirect
+  // var successId = false
+  // for (let userId in users) {
+  //   if (req.body.email === users[userId].email){     // at least 2 bugs
+  //     // If so, login, set email cookie, and redirect
 
-      // res.cookie('email', req.body.email); // Cookie Version
-      // req.session.email = req.body.email; // Session Versio
-      successId = true;
-      // break;
-    }
-      // res.status(403).send('403: WRONG EMAIL');
-    if (successId) {
-      if (req.body.password ===users[userId].password) {
-        console.log('your logged in');
-        res.cookie('user_id', userId);                                                   // ??????
-        res.redirect('/urls');
-        // break;
-      // If not, send status 403 and show 403
-      }
-      res.status(403).send('403: WRONG PASSWORD');
+  //     // res.cookie('email', req.body.email); // Cookie Version
+  //     // req.session.email = req.body.email; // Session Versio
+  //     successId = true;
+  //     // break;
+  //   }
+  //     // res.status(403).send('403: WRONG EMAIL');
+  //   if (successId) {
+  //     if (req.body.password ===users[userId].password) {
+  //       console.log('your logged in');
+  //       res.cookie('user_id', userId);                                                   // ??????
+  //       res.redirect('/urls');
+  //       // break;
+  //     // If not, send status 403 and show 403
+  //     } else {
+  //       res.status(403).send('403: WRONG PASSWORD');
+  //     }
+  //   }
+  // }
+});
+
+function urlsForUser(id) {
+  userDatabase = {}
+  for (userUrl in urlDatabase) {
+    if (urlDatabase[userUrl].userID === id) {
+      userDatabase[userUrl] = urlDatabase[userUrl]
     }
   }
-});
+  return userDatabase;
+}
 
 // app.get('/', (req, res) => {
 //   // Pass the email from the cookie to the template

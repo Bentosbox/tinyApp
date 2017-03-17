@@ -6,7 +6,7 @@
 </head>
 <body>
     <% for (var newUrl in urls) { %>
-        <li><%= newUrl %> : <%= urls[newUrl] %>
+        <li><%= newUrl %> : <%= urls[newUrl].longUrl %>
           <form method="POST" action="/urls/<%= newUrl %>/delete">
             <p>
               <button>Delete URL</button>
