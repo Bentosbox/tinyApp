@@ -20,6 +20,8 @@ var express = require("express");
 var app = express();
 var PORT = process.env.PORT || 8080; // default port 8080
 var cookieParser = require("cookie-parser");
+const bcrypt = require('bcrypt');
+
 
 app.use(cookieParser());
 app.set("view engine", "ejs");
@@ -208,20 +210,22 @@ app.post('/register', (req, res) => {
 });
 
 app.post('/register/email', (req, res) => {
+console.log(users);
   let email = req.body.email;
   let password = req.body.password;
+  const hashed_password = bcrypt.hashSync(password, 10);
   let RandomID = generateRandomString();
   // newuserRandomID = (email + RandomID);
 
   if (!password || !email) {           ///fix stuffs
     res.status(400).render('400');
   } else {
-    users[RandomID] = {
+      users[RandomID] = {
       id: RandomID,
       email: email,
-      password: password
+      password: hashed_password
     };
-    console.log(users);
+    // console.log(users);
     // newuserRandomID = (email + RandomID);
     // users[newuserRandomID].id = newuserRandomID;
     // users[newuserRandomID].email = email;
@@ -233,48 +237,79 @@ app.post('/register/email', (req, res) => {
     console.log(users);
 });
 
-console.log(users);
 
 app.get('/login', (req, res) => {
   res.render('login');
 });
 
+// app.post('/login', (req, res) => {
+//   console.log(users);
+//   const email = req.body.email;
+//   const password = req.body.password;
+
+//   let success = false
+//   let loggedUser;
+//   for (user in users) {
+//     console.log('email in loop: ' + email )
+//     console.log("checking " + users[user].email);
+//     if (email === users[user].email) {
+//       success = true;
+//       console.log('email check success')
+//       // if (success) {
+//         // bcrypt.compareSync(password, users[user].password, function(err, res) {
+//         //   if (res == true) {
+//       var passwordMatch = bcrypt.compareSync(password, users[user].password);
+//           if (passwordMatch) {
+//           console.log('logged in!');
+//           // loggedUser = user;
+//           res.cookie('user_id', users[user].id);
+//           res.redirect('/urls');
+//           } else {
+//             // res.status(403).send('403 WRONG PASSWORD');
+//           }
+//         } else {
+//           res.status(403).send('403 WRONG EMAIL');
+//       }
+//     }
+// });
+
 app.post('/login', (req, res) => {
+  console.log(users);
   const email = req.body.email;
   const password = req.body.password;
 
-  let success = false
-  let loggedUser;
-  for (user in users) {
-    if (email === users[user].email) {
-      if (password === users[user].password) {
-        console.log('logged in!');
-        success = true;
-        loggedUser = user;
-      }
+    let success = false;
+    for (user in users) {
+        if (email === users[user].email) {
+            var passwordMatch = bcrypt.compareSync(password, users[user].password);
+            if (passwordMatch) {
+                console.log('logged in!');
+                success = true;
+            }
+        }
     }
-  }
 
-  if (success && loggedUser) {
-    res.cookie('user_id', loggedUser);
-    res.redirect('/urls');
-  } else {
-    res.status(403).send('403: WRONG STUFF');
-  }
-        // res.status(403).send('403: WRONG PASSWORD');
-  // TODO: currently only works on first user (other users get the 403 even if they're valid)
-  // Check to see if there is a user with the body email
-  // const user = users[req.body.user];
-    // Check to see if that user has the body password
+    if (success) {
+        res.cookie('user_id', users[user].id);
+        res.redirect('/urls');
+    } else {
+        res.status(403).send('403 WRONG EMAIL AND PASSWORD');
+    }
+});
+
+
+    // }
+  // }
+
+  // if (success && loggedUser) {
+  // } else {
+    // res.status(403).send('403: WRONG EMAIL');
+  // }
+
   // var successId = false
   // for (let userId in users) {
   //   if (req.body.email === users[userId].email){     // at least 2 bugs
-  //     // If so, login, set email cookie, and redirect
-
-  //     // res.cookie('email', req.body.email); // Cookie Version
-  //     // req.session.email = req.body.email; // Session Versio
   //     successId = true;
-  //     // break;
   //   }
   //     // res.status(403).send('403: WRONG EMAIL');
   //   if (successId) {
@@ -289,7 +324,6 @@ app.post('/login', (req, res) => {
   //     }
   //   }
   // }
-});
 
 function urlsForUser(id) {
   userDatabase = {}
