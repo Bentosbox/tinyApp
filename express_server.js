@@ -187,7 +187,9 @@ app.post('/register', (req, res) => {
   const hashed_password = bcrypt.hashSync(password, 10);
   let RandomID = generateRandomString();
   if (!password || !email) {           ///fix stuffs
-    res.status(400).render('400');
+    res.status(400).send('Please Enter an Email and Password');
+  } else if (doesEmailExist(email)) {
+    res.status(400).send('Email Already In Use')
   } else {
     users[RandomID] = {
       id: RandomID,
@@ -245,6 +247,15 @@ function generateRandomString() {
   for( var i=0; i < 6; i++ )
     text += possible.charAt(Math.floor(Math.random() * possible.length));
   return text;
+}
+
+function doesEmailExist(email) {
+  for (user in users) {
+    if (email === users[user].email){
+      return true;
+    }
+  }
+  return false;
 }
 
 function urlsForUser(id) {
