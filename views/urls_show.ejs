@@ -5,10 +5,16 @@
     <% include ./partials/_header %>
   </head>
   <body>
-         <li>Short URL =  <%= redirectURL %>
-         <form action="/urls/<%= shortURL %>" method="POST">
+        <li>Short URL = <a href="http://localhost:8080/u/<%= shortURL %>"><%= shortURL %></a>
+        <form action="/urls/<%= shortURL %>" method="POST">
           <input id="updateURL" type="text" name="updateURL" value= "<%= redirectURL %>"" style="width: 300px">
           <button> Update Now! </button>
-         </form>
+        </form>
+        <form method="POST" action="/urls/<%= shortURL %>/delete">
+          <p>
+            <button>Delete URL</button>
+          </p>
+        </form>
+        </li>
   </body>
   </html>

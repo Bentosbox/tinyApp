@@ -27,99 +27,124 @@ var urlDatabase = {
 
 var users = {
   "userRandomID": {
-    'id': "userRandomID",
-    'email': "user@example.com",
-    'password': bcrypt.hashSync('1', 10)
+    id: "userRandomID",
+    email: "user@example.com",
+    password: bcrypt.hashSync('1', 10)
   },
   "user2RandomID": {
-    'id': "user2RandomID",
-    'email': "user2@example.com",
-    'password': "1"
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: bcrypt.hashSync('1', 10)
   }
 };
 
 
-  /////////////allows us to acces POST request parameters stored to the urlDatabase variable.///////////
-  const bodyParser = require("body-parser");
-  app.use(bodyParser.urlencoded({extended: true}));
+/////////////allows us to acces POST request parameters stored to the urlDatabase variable.///////////
+const bodyParser = require("body-parser");
+app.use(bodyParser.urlencoded({extended: true}));
 
 
-  /////////////pushes the urlDatabase into json file and text///////////
-  app.get("/urls.json", (req, res) => {
-    res.json(urlDatabase);
-  });
-
-  /////////////redirects to urls_index to show url name and shortenedname///////////
-  app.get("/urls", (req, res) => {
-    id = req.session.user_id;
-    console.log("all url for that user is: " + urlsForUser(id));
-    console.log(id);
-  // console.log("loading urls, currnt user email is: ", user_email_goes_here);  // TODO: this should be possible
-    let templateVars = { urls: urlsForUser(id),
-      users: req.session.user_id
-    };
-    res.render("urls_index", templateVars);
-  });
-
-  app.get('/', (req, res) => {
-    let templateVars = {users: req.session.user_id};
-    res.render("urls_new", templateVars);
-  });
-
-  ///////////redirects to urls_new///////////
-  app.get("/urls/new", (req, res) => {
-    let templateVars = {users: req.session.user_id};
-    if (req.session.user_id){
-      res.send(200).render("urls_new", templateVars);
-    } else {
-      res.send(401).redirect('/login');
-    }
-  });
+/////////////pushes the urlDatabase into json file and text///////////
+app.get("/urls.json", (req, res) => {
+  res.json(urlDatabase);
+});
 
 
-  /////////////redirects to urls_show to display full url and name///////////////
-
-  app.get("/urls/:id", (req, res) => {
-    let templateVars = { shortURL: req.params.id,
-      redirectURL: urlDatabase[req.params.id].longUrl,
-      users: req.session.user_id
-    };
-    res.render("urls_show", templateVars);
-  });
-
-
-  app.post('/urls/:id', (req, res) => {
-    let templateVars = { shortURL: req.params.id,
-      redirectURL: urlDatabase[req.params.id],
-      users: req.session.user_id
-    };
-    urlDatabase[req.params.id] = req.body.updateURL;
-    res.redirect('/urls');
-  });
-
-  app.get('/u/:id', (req, res) => {
-    if (urlDatabase[req.params.id]) {
-      res.redirect(urlDatabase[req.params.id].longUrl)
-    } else {
-      res.status(404).send('404 NOT FOUND');
-    }
-  });
-
+/////////////redirects to urls_index to show url name and shortenedname///////////
 ///////////URL PAGE SECTION /////////////
-/////////////////////////////////////////
+app.get("/urls", (req, res) => {
+  let id = req.session.user_id;
+  if (id) {
+    // console.log("loading urls, currnt user email is: ", user_email_goes_here);  // TODO: this should be possible
+    let templateVars = {
+      userUrls: urlsForUser(id),
+      users: id
+    };
+    res.status(200).render("urls_index", templateVars);
+  } else {
+    res.status(401).render('error');
+  }
+});
+
 app.post("/urls", (req, res) => {
   let generateUrl = generateRandomString();
   let longurl = req.body.longURL;
-  let cookieId = req.session.user_id;
-  let templateVars = urlDatabase[generateUrl] = {
+  let cookieID = req.session.user_id;
+  urlDatabase[generateUrl] = {
     longUrl: longurl,
-    UserId: cookieId
+    userID: cookieID
   };
+  console.log(urlDatabase);
   res.redirect(longurl);
 });
 
 
-    ////////// Delete Button and Update ////////////////
+//////////ROOT DIRECTORY//////////////////
+app.get('/', (req, res) => {
+  if (req.session.user_id) {
+    res.redirect('/urls');
+  } else {
+    res.redirect('/login');
+  }
+});
+
+
+///////////redirects to urls_new///////////
+app.get("/urls/new", (req, res) => {
+  let templateVars = {users: req.session.user_id};
+  if (req.session.user_id){
+    res.status(200).render("urls_new", templateVars);
+  } else {
+    res.status(401).redirect('/login');
+  }
+});
+
+
+/////////////redirects to urls_show to display full url and name///////////////
+
+app.get("/urls/:id", (req, res) => {
+  if (!urlDatabase[req.params.id]) {
+    res.status(404).send('No Link Exists')
+  } else if (!req.session.user_id) {
+    res.status(401).render('error');
+  } else if (req.session.user_id !== urlDatabase[req.params.id].userID) {
+    res.status(403).send('Incorrect User');
+  } else {
+    let templateVars = {
+      shortURL: req.params.id,
+      redirectURL: urlDatabase[req.params.id].longUrl,
+      users: req.session.user_id
+    };
+  res.status(200).render("urls_show", templateVars);
+  }
+});
+
+
+app.post('/urls/:id', (req, res) => {
+  if (!urlDatabase[req.params.id]) {
+    res.status(404).send('No Link Exists')
+  } else if (!req.session.user_id) {
+    res.status(401).render('error');
+  } else if (req.session.user_id !== urlDatabase[req.params.id].userID) {
+    res.status(403).send('Incorrect User');
+  } else {
+    urlDatabase[req.params.id].longUrl = req.body.updateURL;
+    res.redirect('/urls/' + req.params.id);
+  }
+});
+
+app.get('/u/:id', (req, res) => {
+  if (urlDatabase[req.params.id]) {
+    res.redirect(urlDatabase[req.params.id].longUrl)
+  } else {
+    res.status(404).send('404 NOT FOUND');
+  }
+});
+
+
+
+
+////////// Delete Button and Update ////////////////
 app.post('/urls/:id/delete', (req, res) => {
   if (req.session.user_id === urlDatabase[req.params.id].userID) {
     delete urlDatabase[req.params.id];
@@ -136,7 +161,7 @@ app.post('/urls/:id/update', (req, res) => {
 });
 
 
-/////////////COOKIE SETUP/////////////////
+/////////////LOGOUT/////////////////
 app.post('/logout', (req, res) => {
   delete req.session.user_id;
   res.redirect('/urls');
@@ -148,7 +173,11 @@ app.get('/register', (req, res) => {
   let templateVars = { urls: urlDatabase,
     users: req.session.user_id
   };
-  res.render('urls_register', templateVars);
+  if (req.session.user_id) {
+    res.redirect('/')
+  } else {
+    res.status(200).render('urls_register', templateVars);
+  }
 });
 
 app.post('/register', (req, res) => {
@@ -166,7 +195,7 @@ app.post('/register', (req, res) => {
       password: hashed_password
     };
     req.session.user_id = RandomID;
-    res.redirect('/urls');
+    res.redirect('/');
   }
   console.log(users);
 });
@@ -174,14 +203,19 @@ app.post('/register', (req, res) => {
 
 //////////LOGIN PAGE SECTION///////////
 app.get('/login', (req, res) => {
-  res.render('login');
+  let templateVars = {users: req.session.user_id};
+  if (req.session.user_id) {
+    res.redirect('/');
+  } else {
+    res.render('login', templateVars);
+  }
 });
 
 app.post('/login', (req, res) => {
   console.log(users);
   const email = req.body.email;
   const password = req.body.password;
-
+  let currentUser;
   let success = false;
   for (user in users) {
     if (email === users[user].email) {
@@ -189,18 +223,21 @@ app.post('/login', (req, res) => {
       if (passwordMatch) {
         console.log('logged in!');
         success = true;
+        currentUser = users[user].id;
       }
     }
   }
 
   if (success) {
-    req.session.user_id = users[user].id;
-    res.redirect('/urls');
+    req.session.user_id = currentUser;
+    res.redirect('/');
   } else {
-    res.status(403).send('403 WRONG EMAIL AND PASSWORD');
+    res.status(401).send('401 WRONG EMAIL AND PASSWORD');
   }
 });
 
+
+////////////FUNCTIONS ///////////////
 function generateRandomString() {
   var text = "";
   var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -211,10 +248,11 @@ function generateRandomString() {
 }
 
 function urlsForUser(id) {
-  userDatabase = {}
-  for (userUrl in urlDatabase) {
-    if (urlDatabase[userUrl].userID === id) {
-      userDatabase[userUrl] = urlDatabase[userUrl]
+  let userDatabase = {}
+  for (userUrlID in urlDatabase) {
+    // console.log(urlDatabase[userUrlID].userID + ":" + id);
+    if (urlDatabase[userUrlID] !== undefined && urlDatabase[userUrlID].userID === id) {
+      userDatabase[userUrlID] = urlDatabase[userUrlID]
     }
   }
   return userDatabase;

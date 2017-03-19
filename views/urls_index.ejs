@@ -5,16 +5,18 @@
   <% include ./partials/_header %>
 </head>
 <body>
-    <% for (var newUrl in urls) { %>
-        <li><%= newUrl %> : <%= urls[newUrl].longUrl %>
-          <form method="POST" action="/urls/<%= newUrl %>/delete">
+    <% for (var url in userUrls) { %>
+        <li><%= url %> : <%= userUrls[url].longUrl %>
+          <form method="POST" action="/urls/<%= url %>/delete">
             <p>
               <button>Delete URL</button>
             </p>
           </form>
+          <form method="GET" action="/urls/<%= url %>">
             <p>
-              <a href="/urls/<%= newUrl %>">Update my URL</a>
+              <button>Update my URL</button>
             </p>
+          </form>
         </li>
     <% } %>
     <p>
