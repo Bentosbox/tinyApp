@@ -4,7 +4,8 @@
   </head>
   <body>
     <% if(users){%>
-      <h1>Hi!</h1>
+      <h1>Hi! <%= currentUser %></h1>
+      <a href="/urls %>">My Links</a>
       <form method="POST" action="/logout"><button>Logout</button>
       </form>
     <% } else {%>

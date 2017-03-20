@@ -6,7 +6,7 @@
 </head>
 <body>
     <% for (var url in userUrls) { %>
-        <li><%= url %> : <%= userUrls[url].longUrl %>
+        <li><a href="http://localhost:8080/u/<%= url %>">http://localhost:8080/u/<%= url %></a> for short link to <%= userUrls[url].longUrl %>
           <form method="POST" action="/urls/<%= url %>/delete">
             <p>
               <button>Delete URL</button>

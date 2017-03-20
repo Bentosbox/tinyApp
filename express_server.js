@@ -58,7 +58,8 @@ app.get("/urls", (req, res) => {
     // console.log("loading urls, currnt user email is: ", user_email_goes_here);  // TODO: this should be possible
     let templateVars = {
       userUrls: urlsForUser(id),
-      users: id
+      users: id,
+      currentUser: users[id].email
     };
     res.status(200).render("urls_index", templateVars);
   } else {
@@ -74,7 +75,6 @@ app.post("/urls", (req, res) => {
     longUrl: longurl,
     userID: cookieID
   };
-  console.log(urlDatabase);
   res.redirect(longurl);
 });
 
@@ -91,8 +91,11 @@ app.get('/', (req, res) => {
 
 ///////////redirects to urls_new///////////
 app.get("/urls/new", (req, res) => {
-  let templateVars = {users: req.session.user_id};
   if (req.session.user_id){
+  let templateVars = {
+    users: req.session.user_id,
+    currentUser: users[req.session.user_id].email
+  };
     res.status(200).render("urls_new", templateVars);
   } else {
     res.status(401).redirect('/login');
@@ -113,7 +116,8 @@ app.get("/urls/:id", (req, res) => {
     let templateVars = {
       shortURL: req.params.id,
       redirectURL: urlDatabase[req.params.id].longUrl,
-      users: req.session.user_id
+      users: req.session.user_id,
+      currentUser: users[req.session.user_id].email
     };
   res.status(200).render("urls_show", templateVars);
   }
@@ -170,7 +174,8 @@ app.post('/logout', (req, res) => {
 
 ////////REGISTRATION PAGE/////////////////
 app.get('/register', (req, res) => {
-  let templateVars = { urls: urlDatabase,
+  let templateVars = {
+    urls: urlDatabase,
     users: req.session.user_id
   };
   if (req.session.user_id) {
@@ -186,7 +191,7 @@ app.post('/register', (req, res) => {
   let password = req.body.password;
   const hashed_password = bcrypt.hashSync(password, 10);
   let RandomID = generateRandomString();
-  if (!password || !email) {           ///fix stuffs
+  if (!password || !email) {
     res.status(400).send('Please Enter an Email and Password');
   } else if (doesEmailExist(email)) {
     res.status(400).send('Email Already In Use')
@@ -199,7 +204,6 @@ app.post('/register', (req, res) => {
     req.session.user_id = RandomID;
     res.redirect('/');
   }
-  console.log(users);
 });
 
 
@@ -243,7 +247,6 @@ app.post('/login', (req, res) => {
 function generateRandomString() {
   var text = "";
   var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
   for( var i=0; i < 6; i++ )
     text += possible.charAt(Math.floor(Math.random() * possible.length));
   return text;
@@ -261,7 +264,6 @@ function doesEmailExist(email) {
 function urlsForUser(id) {
   let userDatabase = {}
   for (userUrlID in urlDatabase) {
-    // console.log(urlDatabase[userUrlID].userID + ":" + id);
     if (urlDatabase[userUrlID] !== undefined && urlDatabase[userUrlID].userID === id) {
       userDatabase[userUrlID] = urlDatabase[userUrlID]
     }
