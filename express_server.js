@@ -146,13 +146,13 @@ app.get('/u/:id', (req, res) => {
 });
 
 
-
-
 ////////// Delete Button and Update ////////////////
 app.post('/urls/:id/delete', (req, res) => {
   if (req.session.user_id === urlDatabase[req.params.id].userID) {
     delete urlDatabase[req.params.id];
     res.redirect('/urls');
+  } else {
+    res.status(403).send('Incorrect User');
   }
 });
 
@@ -160,6 +160,8 @@ app.post('/urls/:id/update', (req, res) => {
   if (req.session.user_id === urlDatabase[req.params.id].userID){
     let shortkey = urlDatabase[req.params.id]
     res.redirect('/urls/' + shortkey);
+  } else {
+    res.status(403).send('Incorrect User');
   }
 
 });
